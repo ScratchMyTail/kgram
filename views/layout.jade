@@ -1,0 +1,67 @@
+doctype
+html
+  head
+    link(rel='stylesheet', href='style/style.css')
+    link(rel='stylesheet', href='http://www.prcvl.com/css/segmented-controls.css')
+    title #{title} - My Site
+    script(src="http://code.jquery.com/jquery-2.0.3.min.js")
+    script(type='text/javascript').
+      var oldIds = new Array();
+      $.getJSON( "/insta", function(data){
+        var i = 0;
+        data.forEach(function(entry){
+          if(i==8){
+            return;
+          }
+          imgUrl = entry.images.standard_resolution.url;
+          user = entry.user.username;
+          timestamp = entry.created_time;
+          oldIds.push(entry.id);
+          $("#container").append("<div class='entry' id='"+entry.id+"'><img src='"+imgUrl+"'/><p class='user'>"+user+"</p></div>");
+          i = i + 1;
+        });
+
+        setInterval(function(){refreshData()},10000);
+      });
+
+      function refreshData(){
+        $.getJSON("/insta", function(data){
+          var newIds = new Array();
+          var d = 0;
+          data.forEach(function(entry){
+            if(d < 8){
+              newIds.push(entry.id);
+            }
+            d = d + 1;
+          });
+          
+          // Remove old images and add new images
+          var remove = $(oldIds).not(newIds).get();
+          var add = $(newIds).not(oldIds).get();
+          
+          remove.forEach(function(e){
+            $("#"+e).remove();
+          });
+
+          add.forEach(function(e){
+            data.forEach(function(f){
+              if(e == f.id){
+                imgUrl = f.images.standard_resolution.url;
+                user = f.user.username;
+                timestamp = f.created_time;
+                var cOld = $("#container").html();
+                $("#container").html("<div class='entry' id='"+f.id+"'><img src='"+imgUrl+"'/><p class='user'>"+user+"</p></div>"+cOld);
+                //$("#container").append("<div class='entry' id='"+f.id+"'><img src='"+imgUrl+"'/><p class='user'>"+user+"</p></div>");
+              }
+            });
+          })
+          oldIds = newIds;
+        });
+      }
+
+  body
+  h1 #{title}
+  #container
+        
+  footer
+    p Utviklet av Rune "Boas" Bostad og Christer A. Hansen, Høgskolen i Nesna.
